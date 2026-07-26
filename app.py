@@ -267,7 +267,7 @@ def next_turn():
                 st.session_state.board[y][x] = None
 
     # 5. ターン・ゴールドの更新
-    st.session_state.gold += 10  毎ターンの基本収入
+    st.session_state.gold += 10  
     st.session_state.turn += 1
 
     # クリア判定
