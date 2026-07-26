@@ -131,7 +131,7 @@ if col_b1.button("配置する"):
     st.rerun()
 
 
-# --- メイン：マップ（チェス盤風グリッド）表示 ---
+# --- メイン：マップ（画像グリッド）表示 ---
 st.subheader("🗺️ 戦略マップ")
 st.caption(
     "💡 右側の列から敵が侵攻してきます。左側（X=0付近）で守り抜け！"
@@ -142,7 +142,16 @@ enemy_map = {}
 for e in st.session_state.enemies:
     enemy_map[(e["x"], e["y"])] = e
 
-# 視覚的なグリッド描画
+# 各ユニットに対応する画像のパス（必要に応じて変更してください）
+IMAGE_PATHS = {
+    "砲台 (Archer)": "assets/archer.png",
+    "魔導キャノン (Cannon)": "assets/cannon.png",
+    "壁 (Wall)": "assets/wall.png",
+}
+PLAIN_IMAGE = "assets/plain.png"
+ENEMY_IMAGE = "assets/enemy.png"
+
+# 視覚的なグリッド描画（画像対応版）
 for y in range(GRID_SIZE):
     cols = st.columns(GRID_SIZE)
     for x in range(GRID_SIZE):
@@ -150,40 +159,55 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            # セスのマスの見た目を表現
+            # 表示する画像とテキスト（HPなど）の決定
+            img_url = PLAIN_IMAGE
+            status_text = f"<span style='color:#adb5bd; font-size:10px;'>({x},{y})</span>"
+            bg_color = "rgba(0,0,0,0.05)"
+
             if cell_enemy:
                 # 敵がいる場合
-                st.markdown(
-                    f"""
-                    <div style="background-color:#ffcccc; padding:10px; border-radius:5px; text-align:center; height:70px; border:1px solid #ff9999;">
-                        <b>{cell_enemy['icon']}</b><br>
-                        <span style="font-size:11px;">HP:{cell_enemy['hp']}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                img_url = ENEMY_IMAGE
+                status_text = f"<b style='color:red; font-size:11px;'>HP:{cell_enemy['hp']}</b>"
+                bg_color = "rgba(255, 0, 0, 0.15)"
             elif cell_unit:
                 # 味方ユニットがいる場合
-                st.markdown(
-                    f"""
-                    <div style="background-color:#d4edda; padding:10px; border-radius:5px; text-align:center; height:70px; border:1px solid #c3e6cb;">
-                        <b>{cell_unit['icon']} {cell_unit['name'][0]}</b><br>
-                        <span style="font-size:11px;">HP:{cell_unit['hp']}</span>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
+                img_url = IMAGE_PATHS.get(cell_unit["name"], PLAIN_IMAGE)
+                status_text = (
+                    f"<b style='color:green; font-size:11px;'>HP:{cell_unit['hp']}</b>"
                 )
-            else:
-                # 空マス
-                bg = "#f8f9fa" if (x + y) % 2 == 0 else "#e9ecef"
-                st.markdown(
-                    f"""
-                    <div style="background-color:{bg}; padding:10px; border-radius:5px; text-align:center; height:70px; border:1px solid #dee2e6;">
-                        <span style="color:#adb5bd; font-size:12px;">({x},{y})</span>
+                bg_color = "rgba(0, 255, 0, 0.15)"
+
+            # HTML/CSSを使って画像をタイル状にきれいに表示
+            st.markdown(
+                f"""
+                <div style="
+                    background-image: url('{PLAIN_IMAGE}');
+                    background-size: cover;
+                    background-position: center;
+                    border: 2px solid #ccc;
+                    border-radius: 8px;
+                    height: 85px;
+                    text-align: center;
+                    position: relative;
+                    overflow: hidden;
+                ">
+                    <div style="
+                        background-color: {bg_color};
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 4px;
+                    ">
+                        <img src="{img_url}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;" onerror="this.style.display='none'">
+                        {status_text}
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 st.divider()
 
