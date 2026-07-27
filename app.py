@@ -263,7 +263,7 @@ for y in range(GRID_SIZE):
                 enemy_data = B64_IMAGES.get(cell_enemy["name"]) or B64_IMAGES.get("enemy")
                 
                 if enemy_data and len(enemy_data) > 100:
-                    img_tag = f'<img src="{enemy_data}" style="width: 38px; height: 38px; object-fit: contain;">'
+                    img_tag = f'<img src="{enemy_data}" style="width: 80px; height: 80px; object-fit: contain;">'
                 else:
                     img_tag = f'<span style="font-size: 26px;">{cell_enemy["icon"]}</span>'
                 
