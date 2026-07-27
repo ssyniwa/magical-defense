@@ -181,70 +181,64 @@ for y in range(GRID_SIZE):
             if bg_data:
                 bg_style = f"background-image: url('{bg_data}'); background-size: cover; background-position: center;"
             else:
-                bg_style = "background-color: #555;"  # 画像がない場合のフォールバック
+                bg_style = "background-color: #555;"
 
             # 2. コンテンツの生成
             content_html = ""
-            cell_bg_color = "rgba(0, 0, 0, 0.2)"
+            # 黒つぶれを防ぐため、色を薄くするか枠線で表現する
+            border_color = "#aaa"
 
             if cell_enemy:
-                cell_bg_color = "rgba(255, 0, 0, 0.3)"
+                border_color = "#ff4d4d"  # 敵は赤枠
                 enemy_data = B64_IMAGES.get("enemy")
                 if enemy_data:
-                    img_tag = f'<img src="{enemy_data}" style="width: 40px; height: 40px; object-fit: contain;">'
+                    # 完全に不透明にして背景に負けないようにする
+                    img_tag = f'<img src="{enemy_data}" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
                 else:
                     img_tag = '<div style="font-size: 30px;">👹</div>'
 
                 content_html = f"""
                     {img_tag}
-                    <div style="color: white; background-color: rgba(0,0,0,0.7); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                    <div style="color: white; background-color: rgba(0,0,0,0.8); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
                         HP:{cell_enemy['hp']}
                     </div>
                 """
 
             elif cell_unit:
-                cell_bg_color = "rgba(0, 255, 0, 0.3)"
+                border_color = "#2ecc71"  # ユニットは緑枠
                 unit_data = B64_IMAGES.get(cell_unit["name"])
                 if unit_data:
-                    img_tag = f'<img src="{unit_data}" style="width: 40px; height: 40px; object-fit: contain;">'
+                    img_tag = f'<img src="{unit_data}" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
                 else:
                     img_tag = f'<div style="font-size: 30px;">{cell_unit["icon"]}</div>'
 
                 content_html = f"""
                     {img_tag}
-                    <div style="color: white; background-color: rgba(0,0,0,0.7); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                    <div style="color: white; background-color: rgba(0,0,0,0.8); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
                         HP:{cell_unit['hp']}
                     </div>
                 """
             else:
-                content_html = f'<div style="color: #ddd; font-size: 10px; text-shadow: 1px 1px 2px black;">({x},{y})</div>'
+                content_html = f'<div style="color: #fff; font-size: 10px; text-shadow: 1px 1px 2px black;">({x},{y})</div>'
 
-            # 3. 描画
+            # 3. 描画（半透明の重ね塗りを廃止し、枠線とドロップシャドウでくっきり見せる）
             st.markdown(
                 f"""
                 <div style="
                     {bg_style}
-                    border: 1px solid #aaa;
-                    border-radius: 5px;
+                    border: 2px solid {border_color};
+                    border-radius: 6px;
                     height: 90px;
                     width: 100%;
                     display: flex;
+                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
                     overflow: hidden;
                     margin-bottom: 10px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
                 ">
-                    <div style="
-                        background-color: {cell_bg_color};
-                        width: 100%;
-                        height: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                    ">
-                        {content_html}
-                    </div>
+                    {content_html}
                 </div>
                 """,
                 unsafe_allow_html=True,
