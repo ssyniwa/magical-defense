@@ -186,7 +186,7 @@ for y in range(GRID_SIZE):
                 enemy_b64 = B64_IMAGES.get("enemy")
                 if enemy_b64:
                     # 画像タグ
-                    img_tag = f'<img src="data:image/png;base64,{enemy_b64}" style="width: 50px; height: 50px; object-fit: contain;">'
+                    img_tag =  f"background-image: url('data:image/png;base64,{enemy_b64}'); background-size: cover;"
                 else:
                     # 画像がない場合のフォールバック（絵文字）
                     img_tag = '<div style="font-size: 40px;">👹</div>'
@@ -203,7 +203,7 @@ for y in range(GRID_SIZE):
                 cell_bg_color = "rgba(0, 255, 0, 0.1)" # 緑背景
                 unit_b64 = B64_IMAGES.get(cell_unit["name"])
                 if unit_b64:
-                    img_tag = f'<img src="data:image/png;base64,{unit_b64}" style="width: 50px; height: 50px; object-fit: contain;">'
+                    img_tag = f"background-image: url('data:image/png;base64,{unit_b64}'); background-size: cover;"
                 else:
                     img_tag = f'<div style="font-size: 40px;">{cell_unit["icon"]}</div>'
 
