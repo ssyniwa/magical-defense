@@ -103,7 +103,33 @@ UNIT_TYPES = {
         "desc": "攻撃しない壁",
     },
 }
-
+# --- 敵（魔物）の種類の定義 ---
+ENEMY_TYPES = {
+    "ゴブリン・スカウト": {
+        "hp_base": 25,
+        "atk": 8,
+        "speed": 2,  # 1ターンに2マス進む仕様にする場合などに活用
+        "icon": "🏃",
+    },
+    "スケルトン・ソルジャー": {
+        "hp_base": 30,
+        "atk": 10,
+        "speed": 1,
+        "icon": "👹",
+    },
+    "アーマード・オーク": {
+        "hp_base": 60,
+        "atk": 15,
+        "speed": 1,
+        "icon": "🛡️",
+    },
+    "ボム・インプ": {
+        "hp_base": 20,
+        "atk": 25,  # 攻撃力高め
+        "speed": 1,
+        "icon": "💣",
+    },
+}
 # UIタイトル
 st.title("🛡️ 魔導兵器ディフェンス")
 st.markdown("チェス盤のようなマップに魔導兵器を配置し、迫りくる魔物を撃退せよ！")
@@ -191,7 +217,10 @@ for e in st.session_state.enemies:
 # 画像パスの設定
 IMAGE_ASSETS = {
     "plain": "assets/plain.png",
-    "enemy": "assets/enemy.png",
+    "ゴブリン・スカウト": "assets/goblin.png",
+    "スケルトン・ソルジャー": "assets/enemy.png",
+    "アーマード・オーク": "assets/orc.png",
+    "ボム・インプ": "assets/imp.png",
     "砲台 (Archer)": "assets/archer.png",
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "雷撃塔 (Tesla)": "assets/tesla.png",  # 画像があれば用意
@@ -222,11 +251,14 @@ for y in range(GRID_SIZE):
             # 状態に応じた表示要素の切り分け
             if cell_enemy:
                 border_color = "#ff4d4d"
-                enemy_data = B64_IMAGES.get("enemy")
+                # 敵の名前から個別画像を取得（なければ共通のenemy画像、それもなければ絵文字）
+                enemy_data = B64_IMAGES.get(cell_enemy["name"]) or B64_IMAGES.get("enemy")
+                
                 if enemy_data and len(enemy_data) > 100:
-                    img_tag = f'<img src="{enemy_data}" style="width: 80px; height: 80px; object-fit: contain;">'
+                    img_tag = f'<img src="{enemy_data}" style="width: 38px; height: 38px; object-fit: contain;">'
                 else:
-                    img_tag = '<span style="font-size: 26px;">👹</span>'
+                    img_tag = f'<span style="font-size: 26px;">{cell_enemy["icon"]}</span>'
+                
                 hp_text = f"HP:{cell_enemy['hp']}"
             elif cell_unit:
                 border_color = "#2ecc71"
@@ -258,18 +290,27 @@ st.divider()
 
 # --- ターン進行処理 ---
 def next_turn():
+    # 1. 敵の出現（ランダムに種類を選択）
     if st.session_state.turn <= MAX_TURNS:
         spawn_y = random.randint(0, GRID_SIZE - 1)
-        hp_val = 30 + (st.session_state.turn * 5)
+        
+        # 敵の種類をランダムに選択
+        enemy_name = random.choice(list(ENEMY_TYPES.keys()))
+        e_info = ENEMY_TYPES[enemy_name]
+        
+        # ターンが進むにつれてHPが少し強化される
+        hp_val = e_info["hp_base"] + (st.session_state.turn * 3)
+        
         st.session_state.enemies.append(
             {
                 "id": random.randint(1000, 9999),
+                "name": enemy_name,
                 "x": GRID_SIZE - 1,
                 "y": spawn_y,
                 "hp": hp_val,
                 "max_hp": hp_val,
-                "atk": 10 + int(st.session_state.turn * 1.5),
-                "icon": "👹",
+                "atk": e_info["atk"],
+                "icon": e_info["icon"],
             }
         )
 
