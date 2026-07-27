@@ -182,7 +182,7 @@ for y in range(GRID_SIZE):
 
             if cell_enemy:
                 # 敵の表示
-                cell_bg_color = "rgba(255, 0, 0, 0.2)" # 赤背景
+                cell_bg_color = "rgba(255, 0, 0, 0.1)" # 赤背景
                 enemy_b64 = B64_IMAGES.get("enemy")
                 if enemy_b64:
                     # 画像タグ
@@ -200,7 +200,7 @@ for y in range(GRID_SIZE):
 
             elif cell_unit:
                 # 味方兵器の表示
-                cell_bg_color = "rgba(0, 255, 0, 0.2)" # 緑背景
+                cell_bg_color = "rgba(0, 255, 0, 0.1)" # 緑背景
                 unit_b64 = B64_IMAGES.get(cell_unit["name"])
                 if unit_b64:
                     img_tag = f'<img src="data:image/png;base64,{unit_b64}" style="width: 50px; height: 50px; object-fit: contain;">'
