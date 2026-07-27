@@ -176,6 +176,8 @@ for y in range(GRID_SIZE):
 
             if plain_b64:
                 bg_style = f"background-image: url('data:image/png;base64,{plain_b64}'); background-size: cover; background-position: center;"
+            elif enemy_b64:
+                bg_style = f"background-image: url('data:image/png;base64,{enemy_b64}'); background-size: cover; background-position: center;"
             else:
                 bg_style = "background-color: #e9ecef;"
 
