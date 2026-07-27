@@ -376,7 +376,29 @@ def next_turn():
     new_enemies = []
     for e in st.session_state.enemies:
         e_name = e.get("name", "通常の魔物")
-        
+        is_dead = False
+
+        # ボム・インプの自爆判定（正面にユニットがいる場合）
+        if e_name == "ボム・インプ" and e["x"] > 0:
+            front_unit = st.session_state.board[e["y"]][e["x"] - 1]
+            if front_unit:
+                # 自爆実行：ユニットと周囲のマスに大ダメージ（例: 攻撃力の2倍）
+                explosion_dmg = e["atk"] * 2
+                front_unit["hp"] -= explosion_dmg
+                
+                # （オプション）周囲の上下マスにいるユニットにも巻き込みダメージを与える場合
+                for dy in [-1, 1]:
+                    ny = e["y"] + dy
+                    if 0 <= ny < GRID_SIZE:
+                        splash_unit = st.session_state.board[ny][e["x"] - 1]
+                        if splash_unit:
+                            splash_unit["hp"] -= int(explosion_dmg * 0.5)
+
+                # ボム・インプ自身は自爆して消滅するため、再登録しない（is_dead = True）
+                is_dead = True
+                
+        if is_dead:
+            continue
         # A. ダーク・ウィザードの遠隔攻撃（射程内にユニットがいれば近づかずに攻撃）
         if e_name == "ダーク_ウィザード" or e.get("range", 0) > 1:
             target_unit = None
