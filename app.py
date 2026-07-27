@@ -1,7 +1,8 @@
-import random
-import streamlit as st
 import base64
 import os
+import random
+import streamlit as st
+
 # ページ設定
 st.set_page_config(
     page_title="魔導兵器ディフェンス", page_icon="🛡️", layout="centered"
@@ -21,19 +22,28 @@ def init_game():
     st.session_state.cleared = False
     # 盤面: None または ユニット情報辞書
     st.session_state.board = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
-    # 出現中の敵リスト: [{'id': 1, 'x': x, 'y': y, 'hp': 30, 'max_hp': 30, 'atk': 10}]
+    # 出現中の敵リスト
     st.session_state.enemies = []
 
 
 if "board" not in st.session_state:
     init_game()
-# ローカル画像をBase64に変換する関数
+
+
+# ローカル画像をBase64に変換する関数（MIMEタイプを拡張子から自動判定）
 def get_image_base64(path):
     if os.path.exists(path):
         with open(path, "rb") as f:
             data = f.read()
-        return base64.b64encode(data).decode("utf-8")
+        b64_str = base64.b64encode(data).decode("utf-8")
+        # 拡張子に合わせてMIMEタイプを切り替え
+        if path.endswith((".jpg", ".jpeg", ".JPG", ".JPEG")):
+            return f"data:image/jpeg;base64,{b64_str}"
+        else:
+            return f"data:image/png;base64,{b64_str}"
     return None
+
+
 # --- ユニットの定義 ---
 UNIT_TYPES = {
     "砲台 (Archer)": {
@@ -114,12 +124,10 @@ def place_unit():
         st.sidebar.error("ゴールドが足りません！")
         return
 
-    # すでに何かあるか
     if st.session_state.board[selected_y][selected_x] is not None:
         st.sidebar.error("すでにユニットが配置されています！")
         return
 
-    # 配置（最右列は敵の侵攻ルートとして空けさせる制限も可能だが自由度重視で全域許可）
     base = UNIT_TYPES[selected_unit_name]
     st.session_state.board[selected_y][selected_x] = {
         "name": selected_unit_name,
@@ -144,21 +152,20 @@ st.caption(
     "💡 右側の列から敵が侵攻してきます。左側（X=0付近）で守り抜け！"
 )
 
-# 敵の位置を高速検索するためのマップ作成
 enemy_map = {}
 for e in st.session_state.enemies:
     enemy_map[(e["x"], e["y"])] = e
 
-# --- 画像パスの設定 (assetsフォルダ内のファイル名を指定) ---
+# 画像パスの設定（※必要に応じて .jpg や .png に合わせて変更してください）
 IMAGE_ASSETS = {
-    "plain": "assets/plain.png",     # 背景
-    "enemy": "assets/enemy.png",     # 敵
+    "plain": "assets/plain.png",
+    "enemy": "assets/enemy.png",
     "砲台 (Archer)": "assets/archer.png",
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "壁 (Wall)": "assets/wall.png",
 }
 
-# アプリ起動時に全画像をBase64化してメモリに保持
+# Base64データに変換
 B64_IMAGES = {name: get_image_base64(path) for name, path in IMAGE_ASSETS.items()}
 
 # グリッド描画
@@ -170,61 +177,56 @@ for y in range(GRID_SIZE):
             cell_enemy = enemy_map.get((x, y))
 
             # 1. 背景画像のスタイル設定
-            bg_img_b64 = B64_IMAGES.get("plain")
-            if bg_img_b64:
-                bg_style = f"background-image: url('data:image/png;base64,{bg_img_b64}'); background-size: cover;"
+            bg_data = B64_IMAGES.get("plain")
+            if bg_data:
+                bg_style = f"background-image: url('{bg_data}'); background-size: cover; background-position: center;"
             else:
-                bg_style = "background-color: #ddd;" # 画像がない場合のグレー背景
+                bg_style = "background-color: #555;"  # 画像がない場合のフォールバック
 
-            # 2. コンテンツ（ユニット/敵画像とステータス）のHTML生成
+            # 2. コンテンツの生成
             content_html = ""
-            cell_bg_color = "rgba(0, 0, 0, 0.1)" # デフォルト（空きマス）
+            cell_bg_color = "rgba(0, 0, 0, 0.2)"
 
             if cell_enemy:
-                # 敵の表示
-                cell_bg_color = "rgba(255, 0, 0, 0.1)" # 赤背景
-                enemy_b64 = B64_IMAGES.get("enemy")
-                if enemy_b64:
-                    # 画像タグ
-                    img_tag =  f"background-image: url('data:image/png;base64,{enemy_b64}'); background-size: cover;"
+                cell_bg_color = "rgba(255, 0, 0, 0.3)"
+                enemy_data = B64_IMAGES.get("enemy")
+                if enemy_data:
+                    img_tag = f'<img src="{enemy_data}" style="width: 40px; height: 40px; object-fit: contain;">'
                 else:
-                    # 画像がない場合のフォールバック（絵文字）
-                    img_tag = '<div style="font-size: 40px;">👹</div>'
-                
+                    img_tag = '<div style="font-size: 30px;">👹</div>'
+
                 content_html = f"""
                     {img_tag}
-                    <div style="color: white; background-color: rgba(0,0,0,0.5); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                    <div style="color: white; background-color: rgba(0,0,0,0.7); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
                         HP:{cell_enemy['hp']}
                     </div>
                 """
 
             elif cell_unit:
-                # 味方兵器の表示
-                cell_bg_color = "rgba(0, 255, 0, 0.1)" # 緑背景
-                unit_b64 = B64_IMAGES.get(cell_unit["name"])
-                if unit_b64:
-                    img_tag = f"background-image: url('data:image/png;base64,{unit_b64}'); background-size: cover;"
+                cell_bg_color = "rgba(0, 255, 0, 0.3)"
+                unit_data = B64_IMAGES.get(cell_unit["name"])
+                if unit_data:
+                    img_tag = f'<img src="{unit_data}" style="width: 40px; height: 40px; object-fit: contain;">'
                 else:
-                    img_tag = f'<div style="font-size: 40px;">{cell_unit["icon"]}</div>'
+                    img_tag = f'<div style="font-size: 30px;">{cell_unit["icon"]}</div>'
 
                 content_html = f"""
                     {img_tag}
-                    <div style="color: white; background-color: rgba(0,0,0,0.5); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                    <div style="color: white; background-color: rgba(0,0,0,0.7); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
                         HP:{cell_unit['hp']}
                     </div>
                 """
             else:
-                # 空きマスの表示
-                content_html = f'<div style="color: #aaa; font-size: 10px;">({x},{y})</div>'
+                content_html = f'<div style="color: #ddd; font-size: 10px; text-shadow: 1px 1px 2px black;">({x},{y})</div>'
 
-            # 3. マス全体のHTMLを組み立てて表示 (CSSで画像を中央寄せ)
+            # 3. 描画
             st.markdown(
                 f"""
                 <div style="
                     {bg_style}
                     border: 1px solid #aaa;
                     border-radius: 5px;
-                    height: 100px;
+                    height: 90px;
                     width: 100%;
                     display: flex;
                     align-items: center;
@@ -245,16 +247,14 @@ for y in range(GRID_SIZE):
                     </div>
                 </div>
                 """,
-                unsafe_allow_html=True, # これが重要！HTMLをレンダリングする
+                unsafe_allow_html=True,
             )
 st.divider()
 
 
 # --- ターン進行処理 ---
 def next_turn():
-    # 1. 敵の出現（毎ターン、右端のどこかから出現）
     if st.session_state.turn <= MAX_TURNS:
-        # ターンが進むにつれて敵が強くなる
         spawn_y = random.randint(0, GRID_SIZE - 1)
         hp_val = 30 + (st.session_state.turn * 5)
         st.session_state.enemies.append(
@@ -269,70 +269,56 @@ def next_turn():
             }
         )
 
-    # 2. ユニットの攻撃フェーズ
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
             unit = st.session_state.board[y][x]
             if unit and unit["atk"] > 0:
-                # 射程内にいる最も近い敵を探す
                 target = None
                 min_dist = 999
                 for e in st.session_state.enemies:
-                    dist = abs(e["x"] - x) + abs(e["y"] - y)  # マンハッタン距離
+                    dist = abs(e["x"] - x) + abs(e["y"] - y)
                     if dist <= unit["range"] and dist < min_dist:
                         min_dist = dist
                         target = e
-
-                # 攻撃実行
                 if target:
                     target["hp"] -= unit["atk"]
 
-    # 倒された敵の処理とゴールド・スコア加算
     surviving_enemies = []
     for e in st.session_state.enemies:
         if e["hp"] > 0:
             surviving_enemies.append(e)
         else:
-        # 撃破
             st.session_state.gold += 20
             st.session_state.score += 50
     st.session_state.enemies = surviving_enemies
 
-    # 3. 敵の移動・攻撃フェーズ
     new_enemies = []
     for e in st.session_state.enemies:
-        # 正面（左方向 X-1）にユニットがいるか確認
         target_unit = None
         if e["x"] > 0:
             target_unit = st.session_state.board[e["y"]][e["x"] - 1]
 
         if target_unit:
-            # ユニットがいれば攻撃して進まない
             target_unit["hp"] -= e["atk"]
             new_enemies.append(e)
         else:
-            # 前進できるなら左へ移動
             if e["x"] > 0:
                 e["x"] -= 1
                 new_enemies.append(e)
             else:
-                # X=0を突破されたらゲームオーバー
                 st.session_state.game_over = True
 
     st.session_state.enemies = new_enemies
 
-    # 4. 破壊された味方ユニットの撤去
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
             unit = st.session_state.board[y][x]
             if unit and unit["hp"] <= 0:
                 st.session_state.board[y][x] = None
 
-    # 5. ターン・ゴールドの更新
-    st.session_state.gold += 10  
+    st.session_state.gold += 10
     st.session_state.turn += 1
 
-    # クリア判定
     if st.session_state.turn > MAX_TURNS and len(st.session_state.enemies) == 0:
         st.session_state.cleared = True
 
