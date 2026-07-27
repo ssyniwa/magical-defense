@@ -166,6 +166,7 @@ unit_b64_map = {
 }
 
 # --- 視覚的なグリッド描画（Base64埋め込み版） ---
+# --- 視覚的なグリッド描画（修正版） ---
 for y in range(GRID_SIZE):
     cols = st.columns(GRID_SIZE)
     for x in range(GRID_SIZE):
@@ -174,66 +175,47 @@ for y in range(GRID_SIZE):
             cell_enemy = enemy_map.get((x, y))
 
             # 背景画像のCSS設定
-            bg_style = ""
             if plain_b64:
-                bg_style = (
-                    f"background-image: url('data:image/png;base64,{plain_b64}');"
-                )
+                bg_style = f"background-image: url('data:image/png;base64,{plain_b64}');"
             else:
-                bg_style = "background-color: #e9ecef;"  # 画像がない場合のフォールバック
+                bg_style = "background-color: #e9ecef;"
 
-            # 表示するユニット/敵の画像データとテキスト
-            img_tag = ""
-            status_text = f"<span style='color:#adb5bd; font-size:10px;'>({x},{y})</span>"
-            bg_color = "rgba(0,0,0,0.05)"
-
+            # 表示するコンテンツの切り分け
             if cell_enemy:
                 bg_color = "rgba(255, 0, 0, 0.15)"
-                status_text = f"<b style='color:red; font-size:11px;'>HP:{cell_enemy['hp']}</b>"
+                status_html = (
+                    f'<b style="color:red; font-size:11px;">HP:{cell_enemy["hp"]}</b>'
+                )
                 if enemy_b64:
-                    img_tag = f'<img src="data:image/png;base64,{enemy_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
+                    img_html = f'<img src="data:image/png;base64,{enemy_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
                 else:
-                    img_tag = "👹"  # 画像がない場合の絵文字フォールバック
+                    img_html = "👹"
             elif cell_unit:
                 bg_color = "rgba(0, 255, 0, 0.15)"
-                status_text = f"<b style='color:green; font-size:11px;'>HP:{cell_unit['hp']}</b>"
+                status_html = (
+                    f'<b style="color:green; font-size:11px;">HP:{cell_unit["hp"]}</b>'
+                )
                 u_b64 = unit_b64_map.get(cell_unit["name"])
                 if u_b64:
-                    img_tag = f'<img src="data:image/png;base64,{u_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
+                    img_html = f'<img src="data:image/png;base64,{u_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
                 else:
-                    img_tag = cell_unit["icon"]
+                    img_html = cell_unit["icon"]
+            else:
+                bg_color = "rgba(0,0,0,0.05)"
+                status_html = f'<span style="color:#adb5bd; font-size:10px;">({x},{y})</span>'
+                img_html = ""
 
-            st.markdown(
-                f"""
-                <div style="
-                    {bg_style}
-                    background-size: cover;
-                    background-position: center;
-                    border: 2px solid #ccc;
-                    border-radius: 8px;
-                    height: 85px;
-                    text-align: center;
-                    position: relative;
-                    overflow: hidden;
-                ">
-                    <div style="
-                        background-color: {bg_color};
-                        width: 100%;
-                        height: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        padding: 4px;
-                    ">
-                        {img_tag}
-                        {status_text}
-                    </div>
+            # HTML全体の組み立て（CSSの波括弧がバグらないように分割）
+            html_content = f"""
+            <div style="{bg_style} background-size: cover; background-position: center; border: 2px solid #ccc; border-radius: 8px; height: 85px; text-align: center; position: relative; overflow: hidden;">
+                <div style="background-color: {bg_color}; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px;">
+                    {img_html}
+                    {status_html}
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            </div>
+            """
 
+            st.markdown(html_content, unsafe_allow_html=True)
 st.divider()
 
 
