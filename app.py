@@ -149,24 +149,19 @@ enemy_map = {}
 for e in st.session_state.enemies:
     enemy_map[(e["x"], e["y"])] = e
 
-# 各ユニットに対応する画像のパス（必要に応じて変更してください）
-IMAGE_PATHS = {
-    "砲台 (Archer)": "assets/archer.png",  # .jpg なら "assets/archer.jpg"
+# --- 画像パスの設定 (assetsフォルダ内のファイル名を指定) ---
+IMAGE_ASSETS = {
+    "plain": "assets/plain.png",     # 背景
+    "enemy": "assets/enemy.png",     # 敵
+    "砲台 (Archer)": "assets/archer.png",
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "壁 (Wall)": "assets/wall.png",
 }
-PLAIN_IMAGE_PATH = "assets/plain.png"
-ENEMY_IMAGE_PATH = "assets/enemy.png"
 
-# あらかじめBase64化しておく（なければダミーで空文字）
-plain_b64 = get_image_base64(PLAIN_IMAGE_PATH)
-enemy_b64 = get_image_base64(ENEMY_IMAGE_PATH)
-unit_b64_map = {
-    name: get_image_base64(path) for name, path in IMAGE_PATHS.items()
-}
+# アプリ起動時に全画像をBase64化してメモリに保持
+B64_IMAGES = {name: get_image_base64(path) for name, path in IMAGE_ASSETS.items()}
 
-# --- 視覚的なグリッド描画（Base64埋め込み版） ---
-# --- 視覚的なグリッド描画（画像＆HTML正確版） ---
+# グリッド描画
 for y in range(GRID_SIZE):
     cols = st.columns(GRID_SIZE)
     for x in range(GRID_SIZE):
@@ -174,33 +169,83 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            if plain_b64:
-                bg_style = f"background-image: url('data:image/png;base64,{plain_b64}'); background-size: cover; background-position: center;"
-            elif enemy_b64:
-                bg_style = f"background-image: url('data:image/png;base64,{enemy_b64}'); background-size: cover; background-position: center;"
+            # 1. 背景画像のスタイル設定
+            bg_img_b64 = B64_IMAGES.get("plain")
+            if bg_img_b64:
+                bg_style = f"background-image: url('data:image/png;base64,{bg_img_b64}'); background-size: cover;"
             else:
-                bg_style = "background-color: #e9ecef;"
+                bg_style = "background-color: #ddd;" # 画像がない場合のグレー背景
+
+            # 2. コンテンツ（ユニット/敵画像とステータス）のHTML生成
+            content_html = ""
+            cell_bg_color = "rgba(0, 0, 0, 0.1)" # デフォルト（空きマス）
 
             if cell_enemy:
-                bg_color = "rgba(255, 0, 0, 0.2)"
-                content = f"👹<br><b>HP:{cell_enemy['hp']}</b>"
-            elif cell_unit:
-                bg_color = "rgba(0, 255, 0, 0.2)"
-                content = f"{cell_unit['icon']}<br><b>HP:{cell_unit['hp']}</b>"
-            else:
-                bg_color = "rgba(0, 0, 0, 0.05)"
-                content = f"<span style='color:gray;'>({x},{y})</span>"
+                # 敵の表示
+                cell_bg_color = "rgba(255, 0, 0, 0.2)" # 赤背景
+                enemy_b64 = B64_IMAGES.get("enemy")
+                if enemy_b64:
+                    # 画像タグ
+                    img_tag = f'<img src="data:image/png;base64,{enemy_b64}" style="width: 50px; height: 50px; object-fit: contain;">'
+                else:
+                    # 画像がない場合のフォールバック（絵文字）
+                    img_tag = '<div style="font-size: 40px;">👹</div>'
+                
+                content_html = f"""
+                    {img_tag}
+                    <div style="color: white; background-color: rgba(0,0,0,0.5); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                        HP:{cell_enemy['hp']}
+                    </div>
+                """
 
-            # 必ず unsafe_allow_html=True を指定する
+            elif cell_unit:
+                # 味方兵器の表示
+                cell_bg_color = "rgba(0, 255, 0, 0.2)" # 緑背景
+                unit_b64 = B64_IMAGES.get(cell_unit["name"])
+                if unit_b64:
+                    img_tag = f'<img src="data:image/png;base64,{unit_b64}" style="width: 50px; height: 50px; object-fit: contain;">'
+                else:
+                    img_tag = f'<div style="font-size: 40px;">{cell_unit["icon"]}</div>'
+
+                content_html = f"""
+                    {img_tag}
+                    <div style="color: white; background-color: rgba(0,0,0,0.5); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                        HP:{cell_unit['hp']}
+                    </div>
+                """
+            else:
+                # 空きマスの表示
+                content_html = f'<div style="color: #aaa; font-size: 10px;">({x},{y})</div>'
+
+            # 3. マス全体のHTMLを組み立てて表示 (CSSで画像を中央寄せ)
             st.markdown(
                 f"""
-                <div style="{bg_style} border: 2px solid #ccc; border-radius: 8px; height: 85px; text-align: center; overflow: hidden;">
-                    <div style="background-color: {bg_color}; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px;">
-                        {content}
+                <div style="
+                    {bg_style}
+                    border: 1px solid #aaa;
+                    border-radius: 5px;
+                    height: 100px;
+                    width: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                    margin-bottom: 10px;
+                ">
+                    <div style="
+                        background-color: {cell_bg_color};
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                    ">
+                        {content_html}
                     </div>
                 </div>
                 """,
-                unsafe_allow_html=True,
+                unsafe_allow_html=True, # これが重要！HTMLをレンダリングする
             )
 st.divider()
 
