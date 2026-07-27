@@ -176,25 +176,24 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            # 1. 背景画像のスタイル設定（plainがなければグレー背景）
+            # 1. 背景画像のスタイル設定
             bg_data = B64_IMAGES.get("plain")
             if bg_data:
                 bg_style = f"background-image: url('{bg_data}'); background-size: cover; background-position: center;"
             else:
                 bg_style = "background-color: #333;"
 
-            # 2. コンテンツの生成
+            # 2. 各状態に応じたコンテンツの構築
             content_html = ""
             border_color = "#aaa"
 
             if cell_enemy:
                 border_color = "#ff4d4d"
                 enemy_data = B64_IMAGES.get("enemy")
-                # 画像データが正しく取得できている場合のみ<img>タグにする
                 if enemy_data and len(enemy_data) > 100:
-                    img_tag = f'<img src="{enemy_data}" style="width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
+                    img_tag = f'<img src="{enemy_data}" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
                 else:
-                    img_tag = '<div style="font-size: 28px;">👹</div>'
+                    img_tag = '<div style="font-size: 26px;">👹</div>'
 
                 content_html = f"""
                     {img_tag}
@@ -206,11 +205,10 @@ for y in range(GRID_SIZE):
             elif cell_unit:
                 border_color = "#2ecc71"
                 unit_data = B64_IMAGES.get(cell_unit["name"])
-                # 画像データが正しく取得できている場合のみ<img>タグにする
                 if unit_data and len(unit_data) > 100:
-                    img_tag = f'<img src="{unit_data}" style="width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
+                    img_tag = f'<img src="{unit_data}" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
                 else:
-                    img_tag = f'<div style="font-size: 28px;">{cell_unit["icon"]}</div>'
+                    img_tag = f'<div style="font-size: 26px;">{cell_unit["icon"]}</div>'
 
                 content_html = f"""
                     {img_tag}
@@ -219,9 +217,15 @@ for y in range(GRID_SIZE):
                     </div>
                 """
             else:
-                content_html = f'<div style="color: #ddd; font-size: 10px; text-shadow: 1px 1px 2px black;">({x},{y})</div>'
+                # 空きマスでも他のマスと全く同じ高さをキープするため、ダミーの不可視テキストまたは座標を配置
+                content_html = f"""
+                    <div style="font-size: 26px; visibility: hidden;">・</div>
+                    <div style="color: #eee; font-size: 10px; text-shadow: 1px 1px 2px black; background-color: rgba(0,0,0,0.4); border-radius: 4px; padding: 1px 4px;">
+                        ({x},{y})
+                    </div>
+                """
 
-            # 3. 描画
+            # 3. 描画（すべてのマスで高さを 90px に固定）
             st.markdown(
                 f"""
                 <div style="
