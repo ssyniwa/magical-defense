@@ -188,7 +188,7 @@ for y in range(GRID_SIZE):
                 border_color = "#ff4d4d"
                 enemy_data = B64_IMAGES.get("enemy")
                 if enemy_data and len(enemy_data) > 100:
-                    img_tag = f'<img src="{enemy_data}" style="width: 50px; height: 50px; object-fit: contain;">'
+                    img_tag = f'<img src="{enemy_data}" style="width: 80px; height: 80px; object-fit: contain;">'
                 else:
                     img_tag = '<span style="font-size: 26px;">👹</span>'
                 hp_text = f"HP:{cell_enemy['hp']}"
@@ -196,7 +196,7 @@ for y in range(GRID_SIZE):
                 border_color = "#2ecc71"
                 unit_data = B64_IMAGES.get(cell_unit["name"])
                 if unit_data and len(unit_data) > 100:
-                    img_tag = f'<img src="{unit_data}" style="width: 50px; height: 50px; object-fit: contain;">'
+                    img_tag = f'<img src="{unit_data}" style="width: 80px; height: 80px; object-fit: contain;">'
                 else:
                     img_tag = (
                         f'<span style="font-size: 26px;">{cell_unit["icon"]}</span>'
