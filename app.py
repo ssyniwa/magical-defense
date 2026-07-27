@@ -166,7 +166,7 @@ unit_b64_map = {
 }
 
 # --- 視覚的なグリッド描画（Base64埋め込み版） ---
-# --- 視覚的なグリッド描画（修正版） ---
+# --- 視覚的なグリッド描画（画像＆HTML正確版） ---
 for y in range(GRID_SIZE):
     cols = st.columns(GRID_SIZE)
     for x in range(GRID_SIZE):
@@ -174,48 +174,32 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            # 背景画像のCSS設定
             if plain_b64:
-                bg_style = f"background-image: url('data:image/png;base64,{plain_b64}');"
+                bg_style = f"background-image: url('data:image/png;base64,{plain_b64}'); background-size: cover; background-position: center;"
             else:
                 bg_style = "background-color: #e9ecef;"
 
-            # 表示するコンテンツの切り分け
             if cell_enemy:
-                bg_color = "rgba(255, 0, 0, 0.15)"
-                status_html = (
-                    f'<b style="color:red; font-size:11px;">HP:{cell_enemy["hp"]}</b>'
-                )
-                if enemy_b64:
-                    img_html = f'<img src="data:image/png;base64,{enemy_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
-                else:
-                    img_html = "👹"
+                bg_color = "rgba(255, 0, 0, 0.2)"
+                content = f"👹<br><b>HP:{cell_enemy['hp']}</b>"
             elif cell_unit:
-                bg_color = "rgba(0, 255, 0, 0.15)"
-                status_html = (
-                    f'<b style="color:green; font-size:11px;">HP:{cell_unit["hp"]}</b>'
-                )
-                u_b64 = unit_b64_map.get(cell_unit["name"])
-                if u_b64:
-                    img_html = f'<img src="data:image/png;base64,{u_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
-                else:
-                    img_html = cell_unit["icon"]
+                bg_color = "rgba(0, 255, 0, 0.2)"
+                content = f"{cell_unit['icon']}<br><b>HP:{cell_unit['hp']}</b>"
             else:
-                bg_color = "rgba(0,0,0,0.05)"
-                status_html = f'<span style="color:#adb5bd; font-size:10px;">({x},{y})</span>'
-                img_html = ""
+                bg_color = "rgba(0, 0, 0, 0.05)"
+                content = f"<span style='color:gray;'>({x},{y})</span>"
 
-            # HTML全体の組み立て（CSSの波括弧がバグらないように分割）
-            html_content = f"""
-            <div style="{bg_style} background-size: cover; background-position: center; border: 2px solid #ccc; border-radius: 8px; height: 85px; text-align: center; position: relative; overflow: hidden;">
-                <div style="background-color: {bg_color}; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px;">
-                    {img_html}
-                    {status_html}
+            # 必ず unsafe_allow_html=True を指定する
+            st.markdown(
+                f"""
+                <div style="{bg_style} border: 2px solid #ccc; border-radius: 8px; height: 85px; text-align: center; overflow: hidden;">
+                    <div style="background-color: {bg_color}; width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 12px;">
+                        {content}
+                    </div>
                 </div>
-            </div>
-            """
-
-            st.markdown(html_content, unsafe_allow_html=True)
+                """,
+                unsafe_allow_html=True,
+            )
 st.divider()
 
 
