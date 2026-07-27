@@ -129,6 +129,13 @@ ENEMY_TYPES = {
         "speed": 1,
         "icon": "💣",
     },
+    "ダーク・ウィザード": {
+        "hp_base": 25,
+        "atk": 12,
+        "speed": 1,
+        "range": 2,  # 遠隔攻撃の射程
+        "icon": "🧙‍♂️",
+    },
 }
 # UIタイトル
 st.title("🛡️ 魔導兵器ディフェンス")
@@ -221,6 +228,7 @@ IMAGE_ASSETS = {
     "スケルトン・ソルジャー": "assets/enemy.png",
     "アーマード・オーク": "assets/orc.png",
     "ボム・インプ": "assets/imp.png",
+    "ダーク・ウィザード": "assets/mage.png",
     "砲台 (Archer)": "assets/archer.png",
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "雷撃塔 (Tesla)": "assets/tesla.png",  # 画像があれば用意
