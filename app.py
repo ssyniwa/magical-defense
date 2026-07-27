@@ -62,6 +62,38 @@ UNIT_TYPES = {
         "icon": "💣",
         "desc": "射程3、高火力",
     },
+    "雷撃塔 (Tesla)": {
+        "cost": 45,
+        "hp": 35,
+        "atk": 18,
+        "range": 2,
+        "icon": "⚡",
+        "desc": "射程2、複数攻撃（範囲）",
+    },
+    "スナイパー (Sniper)": {
+        "cost": 60,
+        "hp": 25,
+        "atk": 35,
+        "range": 4,
+        "icon": "🎯",
+        "desc": "超長射程4、高単体火力",
+    },
+    "減速魔方陣 (Frost)": {
+        "cost": 25,
+        "hp": 30,
+        "atk": 0,
+        "range": 0,
+        "icon": "❄️",
+        "desc": "攻撃なし、敵を足止め/減速",
+    },
+    "治癒の祭壇 (Healer)": {
+        "cost": 40,
+        "hp": 50,
+        "atk": 0,
+        "range": 1,
+        "icon": "💖",
+        "desc": "周囲の味方HPを毎ターン回復",
+    },
     "壁 (Wall)": {
         "cost": 15,
         "hp": 80,
@@ -162,6 +194,10 @@ IMAGE_ASSETS = {
     "enemy": "assets/enemy.png",
     "砲台 (Archer)": "assets/archer.png",
     "魔導キャノン (Cannon)": "assets/cannon.png",
+    "雷撃塔 (Tesla)": "assets/tesla.png",  # 画像があれば用意
+    "スナイパー (Sniper)": "assets/sniper.png",
+    "減速魔方陣 (Frost)": "assets/frost.png",
+    "治癒の祭壇 (Healer)": "assets/healer.png",
     "壁 (Wall)": "assets/wall.png",
 }
 
@@ -237,20 +273,45 @@ def next_turn():
             }
         )
 
+    # 2. ユニットの攻撃・特殊フェーズ
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
             unit = st.session_state.board[y][x]
-            if unit and unit["atk"] > 0:
-                target = None
-                min_dist = 999
-                for e in st.session_state.enemies:
-                    dist = abs(e["x"] - x) + abs(e["y"] - y)
-                    if dist <= unit["range"] and dist < min_dist:
-                        min_dist = dist
-                        target = e
-                if target:
-                    target["hp"] -= unit["atk"]
+            if not unit:
+                continue
 
+            # A. 治癒の祭壇の効果（周囲の味方のHPを回復）
+            if unit["name"] == "治癒の祭壇 (Healer)":
+                for dy in [-1, 0, 1]:
+                    for dx in [-1, 0, 1]:
+                        ny, nx = y + dy, x + dx
+                        if 0 <= ny < GRID_SIZE and 0 <= nx < GRID_SIZE:
+                            target_friend = st.session_state.board[ny][nx]
+                            if target_friend and target_friend["hp"] < target_friend["max_hp"]:
+                                target_friend["hp"] = min(
+                                    target_friend["max_hp"], target_friend["hp"] + 15
+                                )
+
+            # B. 攻撃系ユニットの処理
+            elif unit["atk"] > 0:
+                # 雷撃塔（Tesla）の場合：射程内のすべての敵にダメージ
+                if unit["name"] == "雷撃塔 (Tesla)":
+                    for e in st.session_state.enemies:
+                        dist = abs(e["x"] - x) + abs(e["y"] - y)
+                        if dist <= unit["range"]:
+                            e["hp"] -= unit["atk"]
+                
+                # その他の単体攻撃ユニット（Archer, Cannon, Sniper）
+                else:
+                    target = None
+                    min_dist = 999
+                    for e in st.session_state.enemies:
+                        dist = abs(e["x"] - x) + abs(e["y"] - y)
+                        if dist <= unit["range"] and dist < min_dist:
+                            min_dist = dist
+                            target = e
+                    if target:
+                        target["hp"] -= unit["atk"]
     surviving_enemies = []
     for e in st.session_state.enemies:
         if e["hp"] > 0:
