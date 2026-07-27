@@ -1,6 +1,7 @@
 import random
 import streamlit as st
-
+import base64
+import os
 # ページ設定
 st.set_page_config(
     page_title="魔導兵器ディフェンス", page_icon="🛡️", layout="centered"
@@ -26,7 +27,13 @@ def init_game():
 
 if "board" not in st.session_state:
     init_game()
-
+# ローカル画像をBase64に変換する関数
+def get_image_base64(path):
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode("utf-8")
+    return None
 # --- ユニットの定義 ---
 UNIT_TYPES = {
     "砲台 (Archer)": {
@@ -144,14 +151,21 @@ for e in st.session_state.enemies:
 
 # 各ユニットに対応する画像のパス（必要に応じて変更してください）
 IMAGE_PATHS = {
-    "砲台 (Archer)": "assets/archer.png",
+    "砲台 (Archer)": "assets/archer.png",  # .jpg なら "assets/archer.jpg"
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "壁 (Wall)": "assets/wall.png",
 }
-PLAIN_IMAGE = "assets/plain.png"
-ENEMY_IMAGE = "assets/enemy.png"
+PLAIN_IMAGE_PATH = "assets/plain.png"
+ENEMY_IMAGE_PATH = "assets/enemy.png"
 
-# 視覚的なグリッド描画（画像対応版）
+# あらかじめBase64化しておく（なければダミーで空文字）
+plain_b64 = get_image_base64(PLAIN_IMAGE_PATH)
+enemy_b64 = get_image_base64(ENEMY_IMAGE_PATH)
+unit_b64_map = {
+    name: get_image_base64(path) for name, path in IMAGE_PATHS.items()
+}
+
+# --- 視覚的なグリッド描画（Base64埋め込み版） ---
 for y in range(GRID_SIZE):
     cols = st.columns(GRID_SIZE)
     for x in range(GRID_SIZE):
@@ -159,29 +173,40 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            # 表示する画像とテキスト（HPなど）の決定
-            img_url = PLAIN_IMAGE
+            # 背景画像のCSS設定
+            bg_style = ""
+            if plain_b64:
+                bg_style = (
+                    f"background-image: url('data:image/png;base64,{plain_b64}');"
+                )
+            else:
+                bg_style = "background-color: #e9ecef;"  # 画像がない場合のフォールバック
+
+            # 表示するユニット/敵の画像データとテキスト
+            img_tag = ""
             status_text = f"<span style='color:#adb5bd; font-size:10px;'>({x},{y})</span>"
             bg_color = "rgba(0,0,0,0.05)"
 
             if cell_enemy:
-                # 敵がいる場合
-                img_url = ENEMY_IMAGE
-                status_text = f"<b style='color:red; font-size:11px;'>HP:{cell_enemy['hp']}</b>"
                 bg_color = "rgba(255, 0, 0, 0.15)"
+                status_text = f"<b style='color:red; font-size:11px;'>HP:{cell_enemy['hp']}</b>"
+                if enemy_b64:
+                    img_tag = f'<img src="data:image/png;base64,{enemy_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
+                else:
+                    img_tag = "👹"  # 画像がない場合の絵文字フォールバック
             elif cell_unit:
-                # 味方ユニットがいる場合
-                img_url = IMAGE_PATHS.get(cell_unit["name"], PLAIN_IMAGE)
-                status_text = (
-                    f"<b style='color:green; font-size:11px;'>HP:{cell_unit['hp']}</b>"
-                )
                 bg_color = "rgba(0, 255, 0, 0.15)"
+                status_text = f"<b style='color:green; font-size:11px;'>HP:{cell_unit['hp']}</b>"
+                u_b64 = unit_b64_map.get(cell_unit["name"])
+                if u_b64:
+                    img_tag = f'<img src="data:image/png;base64,{u_b64}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;">'
+                else:
+                    img_tag = cell_unit["icon"]
 
-            # HTML/CSSを使って画像をタイル状にきれいに表示
             st.markdown(
                 f"""
                 <div style="
-                    background-image: url('{PLAIN_IMAGE}');
+                    {bg_style}
                     background-size: cover;
                     background-position: center;
                     border: 2px solid #ccc;
@@ -201,7 +226,7 @@ for y in range(GRID_SIZE):
                         justify-content: center;
                         padding: 4px;
                     ">
-                        <img src="{img_url}" style="width: 35px; height: 35px; object-fit: contain; margin-bottom: 2px;" onerror="this.style.display='none'">
+                        {img_tag}
                         {status_text}
                     </div>
                 </div>
