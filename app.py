@@ -156,7 +156,7 @@ enemy_map = {}
 for e in st.session_state.enemies:
     enemy_map[(e["x"], e["y"])] = e
 
-# 画像パスの設定（※必要に応じて .jpg や .png に合わせて変更してください）
+# 画像パスの設定
 IMAGE_ASSETS = {
     "plain": "assets/plain.png",
     "enemy": "assets/enemy.png",
@@ -176,26 +176,25 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            # 1. 背景画像のスタイル設定
+            # 1. 背景画像のスタイル設定（plainがなければグレー背景）
             bg_data = B64_IMAGES.get("plain")
             if bg_data:
                 bg_style = f"background-image: url('{bg_data}'); background-size: cover; background-position: center;"
             else:
-                bg_style = "background-color: #555;"
+                bg_style = "background-color: #333;"
 
             # 2. コンテンツの生成
             content_html = ""
-            # 黒つぶれを防ぐため、色を薄くするか枠線で表現する
             border_color = "#aaa"
 
             if cell_enemy:
-                border_color = "#ff4d4d"  # 敵は赤枠
+                border_color = "#ff4d4d"
                 enemy_data = B64_IMAGES.get("enemy")
-                if enemy_data:
-                    # 完全に不透明にして背景に負けないようにする
-                    img_tag = f'<img src="{enemy_data}" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
+                # 画像データが正しく取得できている場合のみ<img>タグにする
+                if enemy_data and len(enemy_data) > 100:
+                    img_tag = f'<img src="{enemy_data}" style="width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
                 else:
-                    img_tag = '<div style="font-size: 30px;">👹</div>'
+                    img_tag = '<div style="font-size: 28px;">👹</div>'
 
                 content_html = f"""
                     {img_tag}
@@ -205,12 +204,13 @@ for y in range(GRID_SIZE):
                 """
 
             elif cell_unit:
-                border_color = "#2ecc71"  # ユニットは緑枠
+                border_color = "#2ecc71"
                 unit_data = B64_IMAGES.get(cell_unit["name"])
-                if unit_data:
-                    img_tag = f'<img src="{unit_data}" style="width: 45px; height: 45px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
+                # 画像データが正しく取得できている場合のみ<img>タグにする
+                if unit_data and len(unit_data) > 100:
+                    img_tag = f'<img src="{unit_data}" style="width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
                 else:
-                    img_tag = f'<div style="font-size: 30px;">{cell_unit["icon"]}</div>'
+                    img_tag = f'<div style="font-size: 28px;">{cell_unit["icon"]}</div>'
 
                 content_html = f"""
                     {img_tag}
@@ -219,9 +219,9 @@ for y in range(GRID_SIZE):
                     </div>
                 """
             else:
-                content_html = f'<div style="color: #fff; font-size: 10px; text-shadow: 1px 1px 2px black;">({x},{y})</div>'
+                content_html = f'<div style="color: #ddd; font-size: 10px; text-shadow: 1px 1px 2px black;">({x},{y})</div>'
 
-            # 3. 描画（半透明の重ね塗りを廃止し、枠線とドロップシャドウでくっきり見せる）
+            # 3. 描画
             st.markdown(
                 f"""
                 <div style="
