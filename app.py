@@ -176,77 +176,47 @@ for y in range(GRID_SIZE):
             cell_unit = st.session_state.board[y][x]
             cell_enemy = enemy_map.get((x, y))
 
-            # 1. 背景画像のスタイル設定
+            # 背景画像
             bg_data = B64_IMAGES.get("plain")
             if bg_data:
                 bg_style = f"background-image: url('{bg_data}'); background-size: cover; background-position: center;"
             else:
                 bg_style = "background-color: #333;"
 
-            # 2. 各状態に応じたコンテンツの構築
-            content_html = ""
-            border_color = "#aaa"
-
+            # 状態に応じた表示要素の切り分け
             if cell_enemy:
                 border_color = "#ff4d4d"
                 enemy_data = B64_IMAGES.get("enemy")
                 if enemy_data and len(enemy_data) > 100:
-                    img_tag = f'<img src="{enemy_data}" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
+                    img_tag = f'<img src="{enemy_data}" style="width: 38px; height: 38px; object-fit: contain;">'
                 else:
-                    img_tag = '<div style="font-size: 26px;">👹</div>'
-
-                content_html = f"""
-                    {img_tag}
-                    <div style="color: white; background-color: rgba(0,0,0,0.8); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
-                        HP:{cell_enemy['hp']}
-                    </div>
-                """
-
+                    img_tag = '<span style="font-size: 26px;">👹</span>'
+                hp_text = f"HP:{cell_enemy['hp']}"
             elif cell_unit:
                 border_color = "#2ecc71"
                 unit_data = B64_IMAGES.get(cell_unit["name"])
                 if unit_data and len(unit_data) > 100:
-                    img_tag = f'<img src="{unit_data}" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(1px 1px 2px black);">'
+                    img_tag = f'<img src="{unit_data}" style="width: 38px; height: 38px; object-fit: contain;">'
                 else:
-                    img_tag = f'<div style="font-size: 26px;">{cell_unit["icon"]}</div>'
-
-                content_html = f"""
-                    {img_tag}
-                    <div style="color: white; background-color: rgba(0,0,0,0.8); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
-                        HP:{cell_unit['hp']}
-                    </div>
-                """
+                    img_tag = (
+                        f'<span style="font-size: 26px;">{cell_unit["icon"]}</span>'
+                    )
+                hp_text = f"HP:{cell_unit['hp']}"
             else:
-                # 空きマスでも他のマスと全く同じ高さをキープするため、ダミーの不可視テキストまたは座標を配置
-                content_html = f"""
-                    <div style="font-size: 26px; visibility: hidden;">・</div>
-                    <div style="color: #eee; font-size: 10px; text-shadow: 1px 1px 2px black; background-color: rgba(0,0,0,0.4); border-radius: 4px; padding: 1px 4px;">
-                        ({x},{y})
-                    </div>
-                """
+                border_color = "#aaa"
+                img_tag = '<span style="font-size: 26px; visibility: hidden;">・</span>'
+                hp_text = f"({x},{y})"
 
-            # 3. 描画（すべてのマスで高さを 90px に固定）
-            st.markdown(
-                f"""
-                <div style="
-                    {bg_style}
-                    border: 2px solid {border_color};
-                    border-radius: 6px;
-                    height: 90px;
-                    width: 100%;
-                    display: flex;
-                    flex-direction: column;
-                    align-items: center;
-                    justify-content: center;
-                    overflow: hidden;
-                    margin-bottom: 10px;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-                ">
-                    {content_html}
+            # 安全に組み立てたHTMLを出力
+            html_code = f"""
+            <div style="{bg_style} border: 2px solid {border_color}; border-radius: 6px; height: 90px; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; margin-bottom: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);">
+                {img_tag}
+                <div style="color: white; background-color: rgba(0,0,0,0.8); font-size: 10px; font-weight: bold; border-radius: 4px; padding: 1px 4px; margin-top: 2px;">
+                    {hp_text}
                 </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            </div>
+            """
+            st.markdown(html_code, unsafe_allow_html=True)
 st.divider()
 
 
