@@ -299,6 +299,7 @@ st.divider()
 # --- ターン進行処理 ---
 def next_turn():
     # 1. 敵の出現（ランダムに種類を選択）
+    # --- 1. 敵の出現フェーズ ---
     if st.session_state.turn <= MAX_TURNS:
         spawn_y = random.randint(0, GRID_SIZE - 1)
         
@@ -306,7 +307,6 @@ def next_turn():
         enemy_name = random.choice(list(ENEMY_TYPES.keys()))
         e_info = ENEMY_TYPES[enemy_name]
         
-        # ターンが進むにつれてHPが少し強化される
         hp_val = e_info["hp_base"] + (st.session_state.turn * 3)
         
         st.session_state.enemies.append(
@@ -318,6 +318,8 @@ def next_turn():
                 "hp": hp_val,
                 "max_hp": hp_val,
                 "atk": e_info["atk"],
+                "speed": e_info.get("speed", 1),
+                "range": e_info.get("range", 1),
                 "icon": e_info["icon"],
             }
         )
@@ -370,21 +372,53 @@ def next_turn():
             st.session_state.score += 50
     st.session_state.enemies = surviving_enemies
 
+    # --- 3. 敵の移動・特殊攻撃フェーズ ---
     new_enemies = []
     for e in st.session_state.enemies:
-        target_unit = None
-        if e["x"] > 0:
-            target_unit = st.session_state.board[e["y"]][e["x"] - 1]
-
-        if target_unit:
-            target_unit["hp"] -= e["atk"]
-            new_enemies.append(e)
-        else:
-            if e["x"] > 0:
-                e["x"] -= 1
+        e_name = e.get("name", "通常の魔物")
+        
+        # A. ダーク・ウィザードの遠隔攻撃（射程内にユニットがいれば近づかずに攻撃）
+        if e_name == "ダーク_ウィザード" or e.get("range", 0) > 1:
+            target_unit = None
+            # 射程内（例: 前方2マス以内）に味方ユニットがいるか探す
+            for d in range(1, e.get("range", 2) + 1):
+                check_x = e["x"] - d
+                if 0 <= check_x < GRID_SIZE:
+                    found_unit = st.session_state.board[e["y"]][check_x]
+                    if found_unit:
+                        target_unit = found_unit
+                        break
+            
+            if target_unit:
+                # 遠隔攻撃を実行（自分は移動しない）
+                target_unit["hp"] -= e["atk"]
                 new_enemies.append(e)
+                continue
+
+        # B. 通常の移動処理（ゴブリン・スカウトは speed=2 なので2マス進む）
+        speed = e.get("speed", 1)
+        moved = False
+        
+        for _ in range(speed):
+            if e["x"] > 0:
+                # 正面にユニットがいるか確認
+                front_unit = st.session_state.board[e["y"]][e["x"] - 1]
+                if front_unit:
+                    # ユニットがいれば近接攻撃してその場でストップ
+                    front_unit["hp"] -= e["atk"]
+                    break
+                else:
+                    # 進めるなら左へ1マス進む
+                    e["x"] -= 1
+                    moved = True
             else:
+                # X=0を突破されたらゲームオーバー
                 st.session_state.game_over = True
+                break
+
+        # 画面内に生存している敵をリストに保持
+        if not st.session_state.game_over:
+            new_enemies.append(e)
 
     st.session_state.enemies = new_enemies
 
