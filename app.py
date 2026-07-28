@@ -403,15 +403,19 @@ def next_turn():
                         if dist <= unit["range"]:
                             e["hp"] -= unit["atk"]
                 
-                # その他の単体攻撃ユニット（Archer, Cannon, Sniper）
+                # その他の単体攻撃ユニット（射程内の最も近い敵を狙う）
                 else:
                     target = None
                     min_dist = 999
                     for e in st.session_state.enemies:
+                        # マンハッタン距離を計算
                         dist = abs(e["x"] - x) + abs(e["y"] - y)
+                        # 射程内かつ、これまで見つかった敵より距離が近い場合に対象を更新
                         if dist <= unit["range"] and dist < min_dist:
                             min_dist = dist
                             target = e
+                    
+                    # 最も近い敵がいれば攻撃
                     if target:
                         target["hp"] -= unit["atk"]
     
