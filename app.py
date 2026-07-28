@@ -429,31 +429,10 @@ def next_turn():
         e_name = e.get("name", "通常の魔物")
         is_dead = False
 
-        # ボム・インプの自爆判定（正面にユニットがいる場合）
-        if e_name == "ボム・インプ" and e["x"] > 0:
-            front_unit = st.session_state.board[e["y"]][e["x"] - 1]
-            if front_unit:
-                # 自爆実行：ユニットと周囲のマスに大ダメージ（例: 攻撃力の2倍）
-                explosion_dmg = e["atk"] * 2
-                front_unit["hp"] -= explosion_dmg
-                
-                # （オプション）周囲の上下マスにいるユニットにも巻き込みダメージを与える場合
-                for dy in [-1, 1]:
-                    ny = e["y"] + dy
-                    if 0 <= ny < GRID_SIZE:
-                        splash_unit = st.session_state.board[ny][e["x"] - 1]
-                        if splash_unit:
-                            splash_unit["hp"] -= int(explosion_dmg * 0.5)
-
-                # ボム・インプ自身は自爆して消滅するため、再登録しない（is_dead = True）
-                is_dead = True
-                
-        if is_dead:
-            continue
-        # A. ダーク・ウィザードの遠隔攻撃（射程内にユニットがいれば近づかずに攻撃）
-        if e_name == "ダーク_ウィザード" or e.get("range", 0) > 1:
+       # A. 遠隔攻撃・特殊スキルを持つ敵の処理（ダーク・ウィザード、アビス・ドラゴン、ネクロマンサー）
+        # 射程内にユニットがいれば、近づかずに遠隔攻撃を行う
+        if e.get("range", 1) > 1:
             target_unit = None
-            # 射程内（例: 前方2マス以内）に味方ユニットがいるか探す
             for d in range(1, e.get("range", 2) + 1):
                 check_x = e["x"] - d
                 if 0 <= check_x < GRID_SIZE:
@@ -463,42 +442,40 @@ def next_turn():
                         break
             
             if target_unit:
-                # 遠隔攻撃を実行（自分は移動しない）
                 target_unit["hp"] -= e["atk"]
+                
+                # ネクロマンサーの追加効果：攻撃時に少し自身のHPを回復する（または特殊演出）
+                if e_name == "ネクロマンサー":
+                    e["hp"] = min(e["max_hp"], e["hp"] + 5)
+                    
                 new_enemies.append(e)
                 continue
 
-        # B. 通常の移動処理（ゴブリン・スカウトは speed=2 なので2マス進む）
+        # B. 通常および高速移動・前進処理（シャドウ・アサシンは speed=2 など）
         speed = e.get("speed", 1)
-        moved = False
-        
         for _ in range(speed):
             if e["x"] > 0:
-                # 正面にユニットがいるか確認
-                front_unit = st.session_state.board[e["y"]][e["x"] - 1]
+                next_x = e["x"] - 1
+                next_y = e["y"]
+                front_unit = st.session_state.board[next_y][next_x]
+                
                 if front_unit:
-                    # 【追加】もし進む先に「地雷放射機」があった場合
+                    # 地雷放射機を踏んだ場合の処理
                     if front_unit["name"] == "地雷放射機 (Mine)":
-                        # 地雷の攻撃力分のダメージを敵に与える
                         e["hp"] -= front_unit["atk"]
-                        # 地雷（ユニット）を消滅させる（空きマスにする）
                         st.session_state.board[next_y][next_x] = None
-                        
-                        # 地雷の爆発で敵のHPが0以下になっていなければ、そのまま1マス進む
                         if e["hp"] > 0:
                             e["x"] = next_x
                         else:
-                            # 敵も死亡
                             is_dead = True
                         break
                     else:
-                        # 通常のユニットや壁への攻撃
+                        # ギガント・ゴーレムやドレッドノートなどの高火力な通常攻撃
                         front_unit["hp"] -= e["atk"]
                         break
                 else:
-                    # 進めるなら左へ1マス進む
-                    e["x"] -= 1
-                    moved = True
+                    # 進めるなら前へ移動
+                    e["x"] = next_x
             else:
                 # X=0を突破されたらゲームオーバー
                 st.session_state.game_over = True
