@@ -485,7 +485,36 @@ def next_turn():
             st.session_state.score += 50
     st.session_state.enemies = surviving_enemies
     
-    st.session_state.enemies = new_enemies
+    # --- ネクロマンサーによるスケルトン追加召喚フェーズ ---
+    summoned_new_enemies = []
+    for e in st.session_state.enemies:
+        if e.get("name") == "ネクロマンサー":
+            if e["hp"] > 0:
+                spawn_x = e["x"] - 1
+                spawn_y = e["y"]
+                
+                # マップ範囲内で、ユニットや他の敵がいないマスに召喚
+                if 0 <= spawn_x < GRID_SIZE:
+                    has_unit = st.session_state.board[spawn_y][spawn_x] is not None
+                    has_enemy = any(ex["x"] == spawn_x and ex["y"] == spawn_y for ex in st.session_state.enemies + summoned_new_enemies)
+                    
+                    if not has_unit and not has_enemy:
+                        if random.random() < 0.6:  # 60%の確率で毎ターン召喚試行
+                            skel_info = ENEMY_TYPES["スケルトン・ソルジャー"]
+                            summoned_new_enemies.append({
+                                "id": random.randint(1000, 9999),
+                                "name": "スケルトン・ソルジャー",
+                                "x": spawn_x,
+                                "y": spawn_y,
+                                "hp": skel_info["hp_base"],
+                                "max_hp": skel_info["hp_base"],
+                                "atk": skel_info["atk"],
+                                "speed": skel_info["speed"],
+                                "range": 1,
+                                "icon": skel_info["icon"],
+                            })
+
+    st.session_state.enemies.extend(summoned_new_enemies)
 
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
