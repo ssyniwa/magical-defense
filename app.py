@@ -303,7 +303,7 @@ for y in range(GRID_SIZE):
                 else:
                     img_tag = f'<span style="font-size: 26px;">{cell_enemy["icon"]}</span>'
                 
-                hp_text = f"HP:{cell_enemy['hp']}"
+                hp_text = f"HP:{cell_enemy['hp']},speed:{cell_enemy['speed']},range:{cell_enemy['range']}"
             elif cell_unit:
                 border_color = "#2ecc71"
                 unit_data = B64_IMAGES.get(cell_unit["name"])
@@ -313,7 +313,7 @@ for y in range(GRID_SIZE):
                     img_tag = (
                         f'<span style="font-size: 26px;">{cell_unit["icon"]}</span>'
                     )
-                hp_text = f"HP:{cell_unit['hp']}"
+                hp_text = f"HP:{cell_unit['hp']},range:{cell_unit['range']"
             else:
                 border_color = "#aaa"
                 img_tag = '<span style="font-size: 26px; visibility: hidden;">・</span>'
