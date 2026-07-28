@@ -157,7 +157,7 @@ ENEMY_TYPES = {
         "hp_base": 150, "atk": 30, "speed": 1, "range": 2, "icon": "🐉", "is_boss": True
     },
     "ネクロマンサー": {
-        "hp_base": 70, "atk": 22, "speed": 1, "range": 3, "icon": "💀", "is_boss": True
+        "hp_base": 50, "atk": 22, "speed": 1, "range": 3, "icon": "💀", "is_boss": True
     },
     "ギガント・ゴーレム": {
         "hp_base": 200, "atk": 25, "speed": 1, "icon": "🗿", "is_boss": True
