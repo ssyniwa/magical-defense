@@ -78,6 +78,30 @@ UNIT_TYPES = {
         "icon": "🎯",
         "desc": "超長射程4、高単体火力",
     },
+    "バリスタ (Ballista)": {
+        "cost": 55,
+        "hp": 30,
+        "atk": 20,
+        "range": 4,
+        "icon": "🚀",
+        "desc": "同一ライン上の敵を貫通攻撃",
+    },
+    "地雷放射機 (Mine)": {
+        "cost": 25,
+        "hp": 25,
+        "atk": 40,
+        "range": 0,
+        "icon": "⚠️",
+        "desc": "踏み込んだ敵に大ダメージ",
+    },
+    "シールド発生器 (Shield)": {
+        "cost": 40,
+        "hp": 40,
+        "atk": 0,
+        "range": 1,
+        "icon": "🛡️",
+        "desc": "周囲の味方にシールド（回復）付与",
+    },
     "減速魔方陣 (Frost)": {
         "cost": 25,
         "hp": 30,
@@ -233,6 +257,9 @@ IMAGE_ASSETS = {
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "雷撃塔 (Tesla)": "assets/tesla.png",  # 画像があれば用意
     "スナイパー (Sniper)": "assets/sniper.png",
+    "バリスタ (Ballista)": "assets/ballista.png",
+    "地雷放射機 (Mine)": "assets/mine.png",
+    "シールド発生器 (Shield)": "assets/shield.png",
     "減速魔方陣 (Frost)": "assets/frost.png",
     "治癒の祭壇 (Healer)": "assets/healer.png",
     "壁 (Wall)": "assets/wall.png",
@@ -331,8 +358,14 @@ def next_turn():
             if not unit:
                 continue
 
-            # A. 治癒の祭壇の効果（周囲の味方のHPを回復）
-            if unit["name"] == "治癒の祭壇 (Healer)":
+            # A. バリスタの直線貫通攻撃（同じY座標にいる敵すべてを攻撃）
+            if unit["name"] == "バリスタ (Ballista)":
+                for e in st.session_state.enemies:
+                    if e["y"] == y and 0 <= (e["x"] - x) <= unit["range"]:
+                        e["hp"] -= unit["atk"]
+
+            # B. 治癒の祭壇やシールド発生器の効果（周囲の味方のHP回復）
+            elif unit["name"] in ["治癒の祭壇 (Healer)", "シールド発生器 (Shield)"]:
                 for dy in [-1, 0, 1]:
                     for dx in [-1, 0, 1]:
                         ny, nx = y + dy, x + dx
