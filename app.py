@@ -459,9 +459,24 @@ def next_turn():
                 # 正面にユニットがいるか確認
                 front_unit = st.session_state.board[e["y"]][e["x"] - 1]
                 if front_unit:
-                    # ユニットがいれば近接攻撃してその場でストップ
-                    front_unit["hp"] -= e["atk"]
-                    break
+                    # 【追加】もし進む先に「地雷放射機」があった場合
+                    if front_unit["name"] == "地雷放射機 (Mine)":
+                        # 地雷の攻撃力分のダメージを敵に与える
+                        e["hp"] -= front_unit["atk"]
+                        # 地雷（ユニット）を消滅させる（空きマスにする）
+                        st.session_state.board[next_y][next_x] = None
+                        
+                        # 地雷の爆発で敵のHPが0以下になっていなければ、そのまま1マス進む
+                        if e["hp"] > 0:
+                            e["x"] = next_x
+                        else:
+                            # 敵も死亡
+                            is_dead = True
+                        break
+                    else:
+                        # 通常のユニットや壁への攻撃
+                        front_unit["hp"] -= e["atk"]
+                        break
                 else:
                     # 進めるなら左へ1マス進む
                     e["x"] -= 1
