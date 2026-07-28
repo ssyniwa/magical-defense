@@ -129,36 +129,38 @@ UNIT_TYPES = {
 }
 # --- 敵（魔物）の種類の定義 ---
 ENEMY_TYPES = {
+    # --- 通常の敵 ---
     "ゴブリン・スカウト": {
-        "hp_base": 25,
-        "atk": 8,
-        "speed": 2,  # 1ターンに2マス進む仕様にする場合などに活用
-        "icon": "🏃",
+        "hp_base": 20, "atk": 8, "speed": 2, "icon": "🏃", "is_boss": False
     },
-    "スケルトン・ソルジャー": {
-        "hp_base": 30,
-        "atk": 10,
-        "speed": 1,
-        "icon": "👹",
+    "通常の魔物": {
+        "hp_base": 30, "atk": 10, "speed": 1, "icon": "👹", "is_boss": False
     },
     "アーマード・オーク": {
-        "hp_base": 60,
-        "atk": 15,
-        "speed": 1,
-        "icon": "🛡️",
+        "hp_base": 60, "atk": 15, "speed": 1, "icon": "🛡️", "is_boss": False
     },
     "ボム・インプ": {
-        "hp_base": 20,
-        "atk": 25,  # 攻撃力高め
-        "speed": 1,
-        "icon": "💣",
+        "hp_base": 15, "atk": 25, "speed": 1, "icon": "💣", "is_boss": False
     },
     "ダーク・ウィザード": {
-        "hp_base": 25,
-        "atk": 12,
-        "speed": 1,
-        "range": 2,  # 遠隔攻撃の射程
-        "icon": "🧙‍♂️",
+        "hp_base": 25, "atk": 12, "speed": 1, "range": 2, "icon": "🧙‍♂️", "is_boss": False
+    },
+    
+    # --- 強力な敵（出現率低め） ---
+    "ドレッドノート": {
+        "hp_base": 120, "atk": 20, "speed": 1, "icon": "🤖", "is_boss": True
+    },
+    "シャドウ・アサシン": {
+        "hp_base": 40, "atk": 18, "speed": 2, "icon": "🥷", "is_boss": True
+    },
+    "アビス・ドラゴン": {
+        "hp_base": 150, "atk": 30, "speed": 1, "range": 2, "icon": "🐉", "is_boss": True
+    },
+    "ネクロマンサー": {
+        "hp_base": 70, "atk": 22, "speed": 1, "range": 3, "icon": "💀", "is_boss": True
+    },
+    "ギガント・ゴーレム": {
+        "hp_base": 200, "atk": 25, "speed": 1, "icon": "🗿", "is_boss": True
     },
 }
 # UIタイトル
@@ -330,11 +332,20 @@ def next_turn():
     if st.session_state.turn <= MAX_TURNS:
         spawn_y = random.randint(0, GRID_SIZE - 1)
         
-        # 敵の種類をランダムに選択
-        enemy_name = random.choice(list(ENEMY_TYPES.keys()))
+        # 敵を「通常」と「強力（ボス）」に分類
+        normal_enemies = [name for name, info in ENEMY_TYPES.items() if not info.get("is_boss", False)]
+        boss_enemies = [name for name, info in ENEMY_TYPES.items() if info.get("is_boss", False)]
+        
+        # 15%の確率で強力な敵、85%の確率で通常の敵を選択
+        if random.random() < 0.15 and boss_enemies:
+            enemy_name = random.choice(boss_enemies)
+        else:
+            enemy_name = random.choice(normal_enemies)
+            
         e_info = ENEMY_TYPES[enemy_name]
         
-        hp_val = e_info["hp_base"] + (st.session_state.turn * 3)
+        # ステータスの決定（ターン経過による補正）
+        hp_val = e_info["hp_base"] + (st.session_state.turn * 4)
         
         st.session_state.enemies.append(
             {
