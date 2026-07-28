@@ -484,7 +484,6 @@ def next_turn():
             st.session_state.gold += 20
             st.session_state.score += 50
     st.session_state.enemies = surviving_enemies
-　　
     summoned_new_enemies = []
     for e in st.session_state.enemies:
         if e.get("name") == "ネクロマンサー":
