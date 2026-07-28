@@ -133,7 +133,7 @@ ENEMY_TYPES = {
     "ゴブリン・スカウト": {
         "hp_base": 20, "atk": 8, "speed": 2, "icon": "🏃", "is_boss": False
     },
-    "通常の魔物": {
+    "スケルトン・ソルジャー": {
         "hp_base": 30, "atk": 10, "speed": 1, "icon": "👹", "is_boss": False
     },
     "アーマード・オーク": {
