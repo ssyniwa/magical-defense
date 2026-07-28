@@ -148,19 +148,19 @@ ENEMY_TYPES = {
     
     # --- 強力な敵（出現率低め） ---
     "ドレッドノート": {
-        "hp_base": 120, "atk": 20, "speed": 1, "icon": "🤖", "is_boss": True
+        "hp_base": 100, "atk": 20, "speed": 1, "icon": "🤖", "is_boss": True
     },
     "シャドウ・アサシン": {
         "hp_base": 40, "atk": 18, "speed": 2, "icon": "🥷", "is_boss": True
     },
     "アビス・ドラゴン": {
-        "hp_base": 150, "atk": 30, "speed": 1, "range": 2, "icon": "🐉", "is_boss": True
+        "hp_base": 120, "atk": 30, "speed": 1, "range": 2, "icon": "🐉", "is_boss": True
     },
     "ネクロマンサー": {
         "hp_base": 50, "atk": 22, "speed": 1, "range": 3, "icon": "💀", "is_boss": True
     },
     "ギガント・ゴーレム": {
-        "hp_base": 200, "atk": 25, "speed": 1, "icon": "🗿", "is_boss": True
+        "hp_base": 170, "atk": 25, "speed": 1, "icon": "🗿", "is_boss": True
     },
 }
 # UIタイトル
