@@ -255,6 +255,13 @@ IMAGE_ASSETS = {
     "アーマード・オーク": "assets/orc.png",
     "ボム・インプ": "assets/imp.png",
     "ダーク・ウィザード": "assets/mage.png",
+    # 強力な敵（ボス・エリート）
+    "ドレッドノート": "assets/dreadnought.png",
+    "シャドウ・アサシン": "assets/assassin.png",
+    "アビス・ドラゴン": "assets/dragon.png",
+    "ネクロマンサー": "assets/necromancer.png",
+    "ギガント・ゴーレム": "assets/golem.png",
+    
     "砲台 (Archer)": "assets/archer.png",
     "魔導キャノン (Cannon)": "assets/cannon.png",
     "雷撃塔 (Tesla)": "assets/tesla.png",  # 画像があれば用意
