@@ -84,7 +84,7 @@ UNIT_TYPES = {
         "atk": 20,
         "range": 4,
         "icon": "🚀",
-        "desc": "同一ライン上の敵を貫通攻撃",
+        "desc": "同一Y座標ライン上の敵を貫通攻撃",
     },
     "地雷放射機 (Mine)": {
         "cost": 25,
@@ -294,7 +294,12 @@ for y in range(GRID_SIZE):
 
             # 状態に応じた表示要素の切り分け
             if cell_enemy:
-                border_color = "#ff4d4d"
+                # 敵データの情報からボスかどうかを判定して枠線の色を変更
+                e_type_info = ENEMY_TYPES.get(cell_enemy["name"], {})
+                if e_type_info.get("is_boss", False):
+                    border_color = "#f1c40f"  # 強力な敵（ボス）は黄色
+                else:
+                    border_color = "#ff4d4d"  # 通常の敵は赤色
                 # 敵の名前から個別画像を取得（なければ共通のenemy画像、それもなければ絵文字）
                 enemy_data = B64_IMAGES.get(cell_enemy["name"]) or B64_IMAGES.get("enemy")
                 
